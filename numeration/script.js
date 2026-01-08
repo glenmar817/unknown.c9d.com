@@ -1,6 +1,6 @@
 const VALUES = [
   4, 6, 26, 18, 12, 4, 12, 18, 11, 11, 17, 12, 12,
-  11, 9, 12, 8, 12, 9, 6, 9, 9, 6, 11, 2, 3
+  11, 9, 12, 8, 12, 9, 6, 9, 9, 6, 13, 2, 3
 ];
 
 const VALUE_LL = 24; // LL
@@ -117,4 +117,5 @@ toggleBtn.addEventListener('click', () => {
   toggleBtn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
   localStorage.setItem('theme', isDark ? 'dark' : 'light');
 });
+
 
