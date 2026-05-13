@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>APK Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a2f2a 0%, #031010 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            color: #eef4ff;
+        }
+
+        .app-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: rgba(18, 25, 32, 0.65);
+            backdrop-filter: blur(4px);
+            border-radius: 3rem;
+            padding: 1.8rem 2rem;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+            border: 1px solid rgba(72, 187, 150, 0.3);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C0FFB0, #6ee7b7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1::before {
+            content: "📂";
+            font-size: 2rem;
+            background: none;
+            color: #a3e4c2;
+        }
+
+        .sub {
+            color: #adccd9;
+            margin-top: 0.6rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3bc78b;
+            padding-left: 1rem;
+        }
+
+        .info-card {
+            background: #0f1a1fcc;
+            border-radius: 1.8rem;
+            padding: 1.2rem 1.6rem;
+            margin-bottom: 2rem;
+            border: 1px solid #2c6e5c;
+        }
+
+        .badge {
+            background: #1e3b34;
+            color: #b9ffe0;
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.4rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .file-card {
+            background: #0b171ed9;
+            backdrop-filter: blur(4px);
+            border-radius: 1.5rem;
+            padding: 1.2rem 1rem 1rem 1rem;
+            transition: all 0.2s ease;
+            border: 1px solid #2f6f5e;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+            border-color: #5edbaa;
+            background: #10262ed9;
+        }
+
+        .file-icon {
+            font-size: 2.6rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .file-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            word-break: break-word;
+            color: #f0fffa;
+            margin: 8px 0 4px;
+        }
+
+        .file-meta {
+            font-size: 0.7rem;
+            font-family: monospace;
+            color: #9bc4bb;
+            margin-bottom: 1rem;
+        }
+
+        .file-size {
+            background: #0c2b24;
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 24px;
+        }
+
+        .size-automatic {
+            background: #1e5a4a;
+            font-size: 0.65rem;
+            margin-left: 6px;
+            padding: 0.1rem 0.4rem;
+            border-radius: 20px;
+        }
+
+        .btn-download {
+            background: linear-gradient(95deg, #1f8a6b, #0e6b50);
+            border: none;
+            padding: 0.7rem 1rem;
+            border-radius: 2.2rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            margin-top: 12px;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .btn-download:hover {
+            background: linear-gradient(95deg, #2ea77f, #138f68);
+            transform: scale(0.98);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: #05101270;
+            border-radius: 2rem;
+            margin-block: 2rem;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 4px solid #3e8a74;
+            border-top: 4px solid #b3ffcf;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-msg {
+            background: #00000066;
+            border-radius: 60px;
+            padding: 0.8rem 1.5rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .footer-note {
+            margin-top: 2.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #85aa9f;
+            border-top: 1px dashed #2b6a5a;
+            padding-top: 1.5rem;
+        }
+
+        input[type="text"] {
+            background: #0c1d21;
+            border: 1px solid #367c69;
+            padding: 0.7rem 1rem;
+            border-radius: 2rem;
+            color: white;
+            width: 100%;
+            max-width: 380px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #6fe6bd;
+            box-shadow: 0 0 0 2px #2a826950;
+        }
+
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 0.8rem;
+        }
+
+        button.secondary {
+            background: #253e39;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            color: #ccf4e6;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .count-info {
+            font-size: 0.85rem;
+            background: #102e28;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+        }
+
+        .progress-bar {
+            height: 2px;
+            background: linear-gradient(90deg, #3bc78b, #6ee7b7);
+            width: 0%;
+            transition: width 0.3s;
+            margin-top: 5px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .app-container { padding: 1.2rem; }
+            .file-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
+        <h1>Glen's Workspace</h1>
+        <div class="count-info" id="fileCounter">⏳ Scanning files...</div>
+    </div>
+
+    <div class="info-card">
+        <div class="badge">⚡ AUTO-DETECT SIZE</div>
+        <div class="flex-row">
+
+        </div>
+        <div style="margin-top: 12px;">
+            <label style="font-size:0.8rem;">🔍 Filter: </label>
+            <input type="text" id="searchInput" placeholder="Search files..." autocomplete="off">
+        </div>
+    </div>
+
+    <div id="fileListContainer" class="file-grid">
+        <div class="empty-state"><div class="loader"></div> Kinukuha ang listahan ng mga file...</div>
+    </div>
+
+    <div id="statusMessage" class="status-msg">
+
+    </div>
+</div>
+
+<script>
+    // ================ CONFIGURATION ================
+    // Ilagay dito ang mga filename ng iyong files (AUTO ang SIZE!)
+    // Pwede rin maglagay ng filelist.json sa folder para auto-detect
+    
+    let fileNames = [
+        "Myapp.apk"
+        // Pwede kang magdagdag pa:
+        // "another_file.apk",
+        // "document.pdf",
+        // "setup.zip"
+    ];
+    
+    // ===============================================
+    
+    let fileData = []; // lalagyan ng detailed info (may size)
+    let isLoading = true;
+    
+    const fileContainer = document.getElementById('fileListContainer');
+    const searchInput = document.getElementById('searchInput');
+    const fileCounterSpan = document.getElementById('fileCounter');
+    const statusDiv = document.getElementById('statusMessage');
+    
+    // Convert bytes to human readable format
+    function formatFileSize(bytes) {
+        if (bytes === null || bytes === undefined) return "Unknown size";
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Get file extension icon
+    function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        if (ext === 'apk') return '📱';
+        if (ext === 'pdf') return '📄';
+        if (ext === 'zip' || ext === 'rar') return '📦';
+        if (ext === 'txt' || ext === 'md') return '📃';
+        if (ext === 'jpg' || ext === 'png') return '🖼️';
+        if (ext === 'mp4') return '🎬📽️';
+        return '📎📁';
+    }
+    
+    // Fetch actual file size using HEAD request
+    async function getFileSize(filename) {
+        try {
+            const response = await fetch(filename, { method: 'HEAD' });
+            if (response.ok) {
+                const contentLength = response.headers.get('Content-Length');
+                if (contentLength) {
+                    return parseInt(contentLength);
+                }
+            }
+            return null;
+        } catch (error) {
+            console.warn(`Cannot get size for ${filename}:`, error);
+            return null;
+        }
+    }
+    
+    // Get all file sizes in parallel
+    async function getAllFileSizes(filenames, onProgress) {
+        const results = [];
+        let completed = 0;
+        
+        for (const filename of filenames) {
+            const size = await getFileSize(filename);
+            results.push({
+                name: filename,
+                sizeBytes: size,
+                sizeFormatted: size ? formatFileSize(size) : "Unknown",
+                icon: getFileIcon(filename)
+            });
+            completed++;
+            if (onProgress) onProgress(completed, filenames.length);
+        }
+        return results;
+    }
+    
+    // Render file cards
+    function renderFiles(files) {
+        if (!files.length) {
+            fileContainer.innerHTML = `<div class="empty-state">😕 Walang nakitang files.<br>Siguraduhing tama ang mga pangalan sa 'fileNames' array.</div>`;
+            fileCounterSpan.innerText = `📄 0 files`;
+            return;
+        }
+        
+        let cards = '';
+        for (let file of files) {
+            const sizeDisplay = file.sizeFormatted !== "Unknown" ? file.sizeFormatted : "⏳ Loading...";
+            cards += `
+                <div class="file-card">
+                    <div class="file-icon">${file.icon}</div>
+                    <div class="file-name" title="${file.name}">${escapeHtml(file.name)}</div>
+                    <div class="file-meta">
+                        <span class="file-size">💾 ${sizeDisplay}</span>
+                        ${file.sizeFormatted !== "Unknown" ? '<span class="size-automatic">✓ auto</span>' : ''}
+                    </div>
+                    <a href="${encodeURI(file.name)}" download="${file.name}" style="text-decoration: none;">
+                        <button class="btn-download">⬇️ I-download</button>
+                    </a>
+                </div>
+            `;
+        }
+        fileContainer.innerHTML = cards;
+        
+        const totalSize = files.reduce((sum, f) => sum + (f.sizeBytes || 0), 0);
+        const totalFormatted = formatFileSize(totalSize);
+        fileCounterSpan.innerHTML = `📄 ${files.length} file(s) | 💿 ${totalFormatted}`;
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Filter files based on search
+    function updateFilter() {
+        const query = searchInput.value.trim().toLowerCase();
+        if (!query) {
+            renderFiles(fileData);
+        } else {
+            const filtered = fileData.filter(f => f.name.toLowerCase().includes(query));
+            renderFiles(filtered);
+        }
+    }
+    
+    // Try to load external filelist.json first (optional)
+    async function loadExternalFileList() {
+        try {
+            const response = await fetch('filelist.json');
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    return data.map(item => typeof item === 'string' ? item : item.name);
+                } else if (data.files && Array.isArray(data.files)) {
+                    return data.files.map(f => typeof f === 'string' ? f : f.name);
+                }
+            }
+        } catch(e) {
+            console.log("No external filelist.json found, using internal list");
+        }
+        return null;
+    }
+    
+    // Main load function
+    async function loadFiles() {
+        isLoading = true;
+        fileContainer.innerHTML = `<div class="empty-state"><div class="loader"></div>⏳ Kinukuha ang totoong laki ng bawat file...</div>`;
+        
+        // Try external filelist.json first
+        let namesToLoad = fileNames;
+        const externalList = await loadExternalFileList();
+        if (externalList && externalList.length > 0) {
+            namesToLoad = externalList;
+            statusDiv.innerHTML = "📁 Gumagamit ng external filelist.json — auto-detecting sizes...";
+        } else {
+            statusDiv.innerHTML = "📋 Gamit ang internal file list — kinukuha ang mga aktwal na laki...";
+        }
+        
+        if (namesToLoad.length === 0) {
+            fileContainer.innerHTML = `<div class="empty-state">
+                <strong>⚠️ Walang nakalistang file!</strong><br><br>
+                📝 Paano mag-add:<br>
+                1. I-edit ang <code>fileNames</code> array sa script<br>
+                2. O gumawa ng <code>filelist.json</code> sa parehong folder<br><br>
+                Halimbawa ng filelist.json:<br>
+                <code>["Myapp.apk", "game.apk"]</code>
+            </div>`;
+            fileCounterSpan.innerText = `📄 0 files`;
+            isLoading = false;
+            return;
+        }
+        
+        // Update progress in status
+        function updateProgress(current, total) {
+            statusDiv.innerHTML = `🔍 Kinukuha ang laki: ${current}/${total} files...`;
+        }
+        
+        fileData = await getAllFileSizes(namesToLoad, updateProgress);
+        
+        // Count how many sizes were successfully retrieved
+        const successCount = fileData.filter(f => f.sizeBytes !== null).length;
+        
+        if (successCount === 0) {
+            statusDiv.innerHTML = "⚠️ Hindi makuha ang laki ng mga file. Pero gumagana pa rin ang download. Siguraduhing nasa parehong folder ang mga file.";
+        } else {
+            statusDiv.innerHTML = `✅ ${successCount}/${fileData.length} files — handa na para i-download!`;
+        }
+        
+        renderFiles(fileData);
+        isLoading = false;
+    }
+    
+    // Add refresh button
+    const refreshBtn = document.createElement('button');
+    refreshBtn.innerText = '⟳ Refresh Sizes';
+    refreshBtn.className = 'secondary';
+    refreshBtn.onclick = async () => {
+        statusDiv.innerHTML = "🔄 Binabasa muli ang laki ng mga file...";
+        await loadFiles();
+        updateFilter();
+    };
+    
+    const flexDiv = document.querySelector('.flex-row');
+    if (flexDiv) flexDiv.appendChild(refreshBtn);
+    
+    // Add manual file input
+    const addFileBtn = document.createElement('button');
+    addFileBtn.innerText = '+ Add File';
+    addFileBtn.className = 'secondary';
+    addFileBtn.onclick = () => {
+        const newFile = prompt("Ilagay ang filename (hal: mygame.apk):");
+        if (newFile && newFile.trim()) {
+            fileNames.push(newFile.trim());
+            loadFiles();
+        }
+    };
+    if (flexDiv) flexDiv.appendChild(addFileBtn);
+    
+    // Event listeners
+    searchInput.addEventListener('input', updateFilter);
+    
+    // Start loading
+    loadFiles();
+    
+    console.log("✅ Auto file size detector ready!");
+</script>
+</body>
+</html>
